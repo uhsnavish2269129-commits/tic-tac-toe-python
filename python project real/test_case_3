@@ -1,0 +1,97 @@
+"""
+TEST CASE 3: Invalid Input   (from the problem statement)
+
+  Input                         Expected output
+  (a) Position: 10              (a) Invalid position. Enter a number from 1 to 9.
+  (b) Position: abc             (b) Invalid position. Enter a number from 1 to 9.
+  (c) X plays 1, then O plays 1 (c) Position 1 is already taken. Choose another position.
+                                    (turn does not change)
+
+Run : python test_case_3.py   (works from any folder)
+"""
+import builtins
+import contextlib
+import io
+import sys
+from pathlib import Path
+
+# Find tic_tac_toe.py in this folder or the folder above (works from any folder)
+HERE = Path(__file__).resolve().parent
+for folder in (HERE, HERE.parent):
+    if (folder / "one.py").exists():
+        sys.path.insert(0, str(folder))
+        break
+else:
+    sys.exit("ERROR: one.py not found. Keep it in the same folder as "
+             "this file, or one folder above it.")
+import one
+
+# ---------------------- Test data ----------------------
+# What the players type, in order:
+INPUTS = ["10", "abc", "1", "1"]
+#          (a)   (b)   X    O      -> (c) is: X plays 1, then O plays 1
+
+INVALID = "Invalid position. Enter a number from 1 to 9."
+TAKEN = "Position 1 is already taken. Choose another position."
+
+# What must appear in the output, in this order: (label, line)
+CHECKS = [
+    ("(a) X types 10",                      "Player X, enter position (1-9): 10"),
+    ("(a) expected message",                INVALID),
+    ("    turn does not change: X again ",  "Player X, enter position (1-9): abc"),
+    ("(b) expected message",                INVALID),
+    ("    turn does not change: X again ",  "Player X, enter position (1-9): 1"),
+    ("(c) X played 1, now O types 1",       "Player O, enter position (1-9): 1"),
+    ("(c) expected message",                TAKEN),
+    ("    turn does not change: O again",   "Player O, enter position (1-9):"),
+]
+# -------------------------------------------------------
+
+typed = iter(INPUTS)
+
+
+def fake_input(prompt=""):
+    """Feeds the test inputs to the game and shows them like a real session."""
+    try:
+        value = next(typed)
+    except StopIteration:
+        print(prompt)          # show who is asked next, then stop the game
+        raise EOFError
+    print(prompt + value)
+    return value
+
+
+print("=" * 60)
+print("TEST CASE 3: Invalid Input")
+print("=" * 60)
+print("(a) Position: 10")
+print("(b) Position: abc")
+print("(c) X plays 1, then O plays 1")
+print("-" * 60)
+print("PROGRAM OUTPUT:")
+print("-" * 60)
+
+builtins.input = fake_input
+buffer = io.StringIO()
+with contextlib.redirect_stdout(buffer):
+    one.main()
+output = buffer.getvalue()
+print(output)
+
+print("-" * 60)
+print("EXPECTED OUTPUT CHECK:")
+print("-" * 60)
+position = 0
+all_ok = True
+for label, line in CHECKS:
+    found = output.find(line, position)
+    if found == -1:
+        print(f"  [FAIL] {label}  ->  {line}")
+        all_ok = False
+    else:
+        print(f"  [OK]   {label}  ->  {line}")
+        position = found + len(line)
+
+print()
+print("RESULT: " + ("PASS" if all_ok else "FAIL"))
+sys.exit(0 if all_ok else 1)

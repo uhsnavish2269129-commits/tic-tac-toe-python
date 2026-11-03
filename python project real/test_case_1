@@ -1,0 +1,81 @@
+"""
+TEST CASE 1: Normal Input
+Scenario : Moves: X:1, O:4, X:2, O:5, X:3
+Run      : python test_case_1.py   (works from any folder)
+"""
+import builtins
+import contextlib
+import io
+import sys
+from pathlib import Path
+
+# Find one.py in this folder or the folder above (works from any folder)
+HERE = Path(__file__).resolve().parent
+for folder in (HERE, HERE.parent):
+    if (folder / "one.py").exists():
+        sys.path.insert(0, str(folder))
+        break
+else:
+    sys.exit("ERROR: one.py not found. Keep it in the same folder as "
+             "this file, or one folder above it.")
+import one
+
+# ---------------------- Test data ----------------------
+INPUTS = ['1', '4', '2', '5', '3', 'n']
+EXPECTED = ['Player X wins!', 'Winning line: 1-2-3']
+NOT_EXPECTED = []   # lines that must NOT appear
+# -------------------------------------------------------
+
+typed = iter(INPUTS)
+
+
+def fake_input(prompt=""):
+    """Feeds the test inputs to the game and shows them like a real session."""
+    try:
+        value = next(typed)
+    except StopIteration:
+        raise EOFError
+    print(prompt + value)
+    return value
+
+
+print("=" * 60)
+print("TEST CASE 1: Normal Input")
+print("=" * 60)
+print("Scenario     : Moves: X:1, O:4, X:2, O:5, X:3")
+print("Inputs given : " + ", ".join(repr(i) for i in INPUTS))
+print("-" * 60)
+print("PROGRAM OUTPUT:")
+print("-" * 60)
+
+builtins.input = fake_input
+buffer = io.StringIO()
+with contextlib.redirect_stdout(buffer):
+    one.main()
+output = buffer.getvalue()
+print(output)
+
+print("-" * 60)
+print("EXPECTED OUTPUT CHECK:")
+print("-" * 60)
+position = 0
+all_ok = True
+for line in EXPECTED:
+    found = output.find(line, position)
+    if found == -1:
+        print("  [FAIL] " + line)
+        all_ok = False
+    else:
+        print("  [OK]   " + line)
+        position = found + len(line)
+
+for line in NOT_EXPECTED:
+    if line in output:
+        print("  [FAIL] should not appear: " + line)
+        all_ok = False
+    else:
+        print("  [OK]   does not appear: " + line)
+
+print()
+print("RESULT: " + ("PASS" if all_ok else "FAIL"))
+sys.exit(0 if all_ok else 1)
